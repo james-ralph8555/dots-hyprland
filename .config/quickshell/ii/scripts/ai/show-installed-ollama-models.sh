@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/run/current-system/sw/bin/sh
 
 # Get the list, skip the header, and extract the first column (model names)
 model_names=$(ollama list | tail -n +2 | awk '{print $1}')

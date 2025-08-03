@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/run/current-system/sw/bin/sh
 
 getdate() {
     date '+%Y-%m-%d_%H.%M.%S'

@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/run/current-system/sw/bin/sh
 
 ############ Variables ############
 enable_battery=false

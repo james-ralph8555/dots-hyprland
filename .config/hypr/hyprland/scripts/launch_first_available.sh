@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/run/current-system/sw/bin/sh
 for cmd in "$@"; do
     eval "command -v ${cmd%% *}" >/dev/null 2>&1 || continue
     eval "$cmd" &

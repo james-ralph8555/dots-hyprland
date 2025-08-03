@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/run/current-system/sw/bin/sh
 
 # Controls Hyprland's cursor zoom_factor, clamped between 1.0 and 3.0
 

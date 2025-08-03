@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/run/current-system/sw/bin/sh
 
 # Default system prompt
 SYSTEM_PROMPT="You are a helpful, quick assistant that provides brief and concise explanation \

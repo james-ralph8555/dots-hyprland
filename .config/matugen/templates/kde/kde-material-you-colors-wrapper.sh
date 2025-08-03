@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/run/current-system/sw/bin/sh
 
 XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
 
