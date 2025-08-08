@@ -149,28 +149,28 @@ Scope {
             // Wallpaper
             Image {
                 id: wallpaper
-                visible: !bgRoot.wallpaperIsVideo [cite: 32]
+                visible: !bgRoot.wallpaperIsVideo
                 property real value // 0 to 1, for offset
                 value: {
                     // Range = groups that workspaces span on
-                    const chunkSize = Config?.options.bar.workspaces.shown ?? 10; [cite: 33]
+                    const chunkSize = Config?.options.bar.workspaces.shown ?? 10;
                     const lower = Math.floor(bgRoot.firstWorkspaceId / chunkSize) * chunkSize;
                     const upper = Math.ceil(bgRoot.lastWorkspaceId / chunkSize) * chunkSize;
-                    const range = upper - lower; [cite: 34]
+                    const range = upper - lower;
                     return (Config.options.background.parallax.enableWorkspace ? ((bgRoot.monitor.activeWorkspace.id - lower) / range) : 0.5)
                         + (0.15 * GlobalStates.sidebarRightOpen * Config.options.background.parallax.enableSidebar)
                         - (0.15 * GlobalStates.sidebarLeftOpen * Config.options.background.parallax.enableSidebar)
                 }
-                property real effectiveValue: Math.max(0, Math.min(1, value)) [cite: 35]
+                property real effectiveValue: Math.max(0, Math.min(1, value))
                 x: -(bgRoot.movableXSpace) - (effectiveValue - 0.5) * 2 * bgRoot.movableXSpace
                 y: -(bgRoot.movableYSpace)
                 source: bgRoot.wallpaperPath
-                fillMode: (screen.width < screen.height) ? Image.PreserveAspectFit : Image.PreserveAspectCrop [cite: 36]
+                fillMode: (screen.width < screen.height) ? Image.PreserveAspectFit : Image.PreserveAspectCrop
                 Behavior on x {
                     NumberAnimation {
                         duration: 600
                         easing.type: Easing.OutCubic
-                    } [cite: 37]
+                    } 
                 }
 
                 // --- START OF CORRECTED CODE ---
