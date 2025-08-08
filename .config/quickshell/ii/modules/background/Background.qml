@@ -149,33 +149,43 @@ Scope {
             // Wallpaper
             Image {
                 id: wallpaper
-                visible: !bgRoot.wallpaperIsVideo
+                visible: !bgRoot.wallpaperIsVideo [cite: 32]
                 property real value // 0 to 1, for offset
                 value: {
                     // Range = groups that workspaces span on
-                    const chunkSize = Config?.options.bar.workspaces.shown ?? 10;
+                    const chunkSize = Config?.options.bar.workspaces.shown ?? 10; [cite: 33]
                     const lower = Math.floor(bgRoot.firstWorkspaceId / chunkSize) * chunkSize;
                     const upper = Math.ceil(bgRoot.lastWorkspaceId / chunkSize) * chunkSize;
-                    const range = upper - lower;
+                    const range = upper - lower; [cite: 34]
                     return (Config.options.background.parallax.enableWorkspace ? ((bgRoot.monitor.activeWorkspace.id - lower) / range) : 0.5)
                         + (0.15 * GlobalStates.sidebarRightOpen * Config.options.background.parallax.enableSidebar)
                         - (0.15 * GlobalStates.sidebarLeftOpen * Config.options.background.parallax.enableSidebar)
                 }
-                property real effectiveValue: Math.max(0, Math.min(1, value))
+                property real effectiveValue: Math.max(0, Math.min(1, value)) [cite: 35]
                 x: -(bgRoot.movableXSpace) - (effectiveValue - 0.5) * 2 * bgRoot.movableXSpace
                 y: -(bgRoot.movableYSpace)
                 source: bgRoot.wallpaperPath
-                fillMode: (screen.width < screen.height) ? Image.PreserveAspectFit : Image.PreserveAspectCrop
+                fillMode: (screen.width < screen.height) ? Image.PreserveAspectFit : Image.PreserveAspectCrop [cite: 36]
                 Behavior on x {
                     NumberAnimation {
                         duration: 600
                         easing.type: Easing.OutCubic
+                    } [cite: 37]
+                }
+
+                // --- START OF CORRECTED CODE ---
+                sourceSize: {
+                    if (screen.width < screen.height && bgRoot.wallpaperWidth > 0) {
+                        // For VERTICAL monitors, calculate a "fit" size.
+                        // Scale the image source to fit the screen's width,
+                        // and calculate the height proportionally.
+                        return Qt.size(screen.width, bgRoot.wallpaperHeight * (screen.width / bgRoot.wallpaperWidth))
+                    } else {
+                        // For LANDSCAPE monitors, use the original "crop" and "zoom" behavior.
+                        return Qt.size(bgRoot.screen.width * bgRoot.effectiveWallpaperScale, bgRoot.screen.height * bgRoot.effectiveWallpaperScale)
                     }
                 }
-                sourceSize {
-                    width: bgRoot.screen.width * bgRoot.effectiveWallpaperScale
-                    height: bgRoot.screen.height * bgRoot.effectiveWallpaperScale
-                }
+                // --- END OF CORRECTED CODE ---
             }
 
             // The clock
