@@ -71,7 +71,7 @@ Scope {
                 left: true
                 right: true
             }
-            color: "transparent"
+            color: "black"
 
             onWallpaperPathChanged: {
                 bgRoot.updateZoomScale()
@@ -165,7 +165,7 @@ Scope {
                 x: -(bgRoot.movableXSpace) - (effectiveValue - 0.5) * 2 * bgRoot.movableXSpace
                 y: -(bgRoot.movableYSpace)
                 source: bgRoot.wallpaperPath
-                fillMode: Image.PreserveAspectCrop
+                fillMode: (screen.width < screen.height) ? Image.PreserveAspectFit : Image.PreserveAspectCrop
                 Behavior on x {
                     NumberAnimation {
                         duration: 600
