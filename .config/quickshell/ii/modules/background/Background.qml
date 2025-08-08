@@ -163,7 +163,7 @@ Scope {
                 }
                 property real effectiveValue: Math.max(0, Math.min(1, value))
                 x: -(bgRoot.movableXSpace) - (effectiveValue - 0.5) * 2 * bgRoot.movableXSpace
-                y: -(bgRoot.movableYSpace)
+                y: (screen.width < screen.height) ? (bgRoot.height - height) / 2 : -(bgRoot.movableYSpace)
                 source: bgRoot.wallpaperPath
                 fillMode: (screen.width < screen.height) ? Image.PreserveAspectFit : Image.PreserveAspectCrop
                 Behavior on x {
