@@ -1,2 +1,2 @@
 #!/run/current-system/sw/bin/sh
-hyprctl dispatch "$1" $(((($(hyprctl activeworkspace -j | jq -r .id) - 1)  / 10) * 10 + $2))
+hyprctl dispatch "$1" $(((($(hyprctl monitors -j | jq -r '.[] | select(.focused == true) | .activeWorkspace.id') - 1) / 10) * 10 + $2))
