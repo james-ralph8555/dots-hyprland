@@ -71,7 +71,7 @@ Scope {
                 left: true
                 right: true
             }
-            color: "transparent"
+            color: "black"
 
             onWallpaperPathChanged: {
                 bgRoot.updateZoomScale()
@@ -163,19 +163,29 @@ Scope {
                 }
                 property real effectiveValue: Math.max(0, Math.min(1, value))
                 x: -(bgRoot.movableXSpace) - (effectiveValue - 0.5) * 2 * bgRoot.movableXSpace
-                y: -(bgRoot.movableYSpace)
+                y: (screen.width < screen.height) ? (bgRoot.height - height) / 2 : -(bgRoot.movableYSpace)
                 source: bgRoot.wallpaperPath
-                fillMode: Image.PreserveAspectCrop
+                fillMode: (screen.width < screen.height) ? Image.PreserveAspectFit : Image.PreserveAspectCrop
                 Behavior on x {
                     NumberAnimation {
                         duration: 600
                         easing.type: Easing.OutCubic
+                    } 
+                }
+
+                // --- START OF CORRECTED CODE ---
+                sourceSize: {
+                    if (screen.width < screen.height && bgRoot.wallpaperWidth > 0) {
+                        // For VERTICAL monitors, calculate a "fit" size.
+                        // Scale the image source to fit the screen's width,
+                        // and calculate the height proportionally.
+                        return Qt.size(screen.width, bgRoot.wallpaperHeight * (screen.width / bgRoot.wallpaperWidth))
+                    } else {
+                        // For LANDSCAPE monitors, use the original "crop" and "zoom" behavior.
+                        return Qt.size(bgRoot.screen.width * bgRoot.effectiveWallpaperScale, bgRoot.screen.height * bgRoot.effectiveWallpaperScale)
                     }
                 }
-                sourceSize {
-                    width: bgRoot.screen.width * bgRoot.effectiveWallpaperScale
-                    height: bgRoot.screen.height * bgRoot.effectiveWallpaperScale
-                }
+                // --- END OF CORRECTED CODE ---
             }
 
             // The clock
