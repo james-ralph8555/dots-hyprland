@@ -25,7 +25,7 @@ Scope {
     property real artRounding: Appearance.rounding.verysmall
     property list<real> visualizerPoints: []
 
-    property bool hasPlasmaIntegration: true
+    property bool hasPlasmaIntegration: false
     Process {
         id: plasmaIntegrationAvailabilityCheckProc
         running: true
@@ -35,7 +35,9 @@ Scope {
         }
     }
     function isRealPlayer(player) {
-        // return true
+        if (!Config.options.media.filterDuplicatePlayers) {
+            return true;
+        }
         return (
             // Remove unecessary native buses from browsers if there's plasma integration
             !(hasPlasmaIntegration && player.dbusName.startsWith('org.mpris.MediaPlayer2.firefox')) &&
@@ -107,12 +109,14 @@ Scope {
             id: mediaControlsRoot
             visible: true
 
+            exclusionMode: ExclusionMode.Ignore
             exclusiveZone: 0
-            implicitWidth: (
-                (mediaControlsRoot.screen.width / 2) // Middle of screen
-                    - (osdWidth / 2)                 // Dodge OSD
-                    - (widgetWidth / 2)              // Account for widget width
-            ) * 2
+            margins {
+                top: Appearance.sizes.barHeight
+                bottom: Appearance.sizes.barHeight
+                left: (mediaControlsRoot.screen.width / 2) - (osdWidth / 2) - widgetWidth
+            }
+            implicitWidth: root.widgetWidth
             implicitHeight: playerColumnLayout.implicitHeight
             color: "transparent"
             WlrLayershell.namespace: "quickshell:mediaControls"
@@ -128,12 +132,7 @@ Scope {
 
             ColumnLayout {
                 id: playerColumnLayout
-                anchors.top: parent.top
-                anchors.bottom: parent.bottom
-                x: (mediaControlsRoot.screen.width / 2)  // Middle of screen
-                    - (osdWidth / 2)                     // Dodge OSD
-                    - (widgetWidth)                      // Account for widget width
-                    + (Appearance.sizes.elevationMargin) // It's fine for shadows to overlap
+                anchors.fill: parent
                 spacing: -Appearance.sizes.elevationMargin // Shadow overlap okay
 
                 Repeater {
