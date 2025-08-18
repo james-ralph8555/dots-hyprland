@@ -144,6 +144,7 @@ Scope {
                         bgRoot.dominantColor = parsedContent.dominant_color || Appearance.colors.colPrimary
                     }
                 }
+            }
 
             // Wallpaper
             Image {
