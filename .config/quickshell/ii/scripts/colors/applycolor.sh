@@ -27,6 +27,12 @@ IFS=$'\n'
 colorlist=($colornames)     # Array of color names
 colorvalues=($colorstrings) # Array of color values
 
+for i in "${!colorlist[@]}"; do
+  if [ "${colorlist[$i]}" = "\$term7" ]; then
+    colorvalues[$i]="#D9E0EE"
+  fi
+done
+
 apply_term() {
   # Check if terminal escape sequence template exists
   if [ ! -f "$SCRIPT_DIR/terminal/sequences.txt" ]; then
