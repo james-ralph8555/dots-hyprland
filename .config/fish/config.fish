@@ -27,3 +27,16 @@ alias q 'qs -c ii'
 #   set_color cyan; echo (pwd)
 #   set_color green; echo '> '
 # end
+
+# tmux aliases
+alias tmuxd 'tmux detach'
+alias tmux0 'tmux attach -t 0'
+alias tmux1 'tmux attach -t 1'
+alias tmux2 'tmux attach -t 2'
+alias tmux3 'tmux attach -t 3'
+alias tmux4 'tmux attach -t 4'
+alias tmux5 'tmux attach -t 5'
+alias tmux6 'tmux attach -t 6'
+alias tmux7 'tmux attach -t 7'
+alias tmux8 'tmux attach -t 8'
+alias tmux9 'tmux attach -t 9'
