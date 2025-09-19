@@ -198,7 +198,7 @@ Singleton {
             property string title: "Gabarito"
             property string iconMaterial: "Material Symbols Rounded"
             property string iconNerd: "SpaceMono NF"
-            property string monospace: "JetBrains Mono NF"
+            property string monospace: "BerkeleyMono-Regular"
             property string reading: "Readex Pro"
             property string expressive: "Space Grotesk"
         }
