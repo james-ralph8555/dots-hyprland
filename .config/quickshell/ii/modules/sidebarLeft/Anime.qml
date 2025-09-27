@@ -24,6 +24,15 @@ Item {
     property var suggestionList: []
 
     Connections {
+        target: Config
+        function onReadyChanged() {
+            if (Config.options.policies.weeb !== 0) {
+                Quickshell.execDetached(["bash", "-c", `mkdir -p '${root.downloadPath}' && mkdir -p '${root.nsfwPath}'`])
+            }
+        }
+    }
+
+    Connections {
         target: Booru
         function onTagSuggestion(query, suggestions) {
             root.suggestionQuery = query;
@@ -132,6 +141,21 @@ Item {
         Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
+
+            layer.enabled: true
+            layer.effect: OpacityMask {
+                maskSource: Rectangle {
+                    width: swipeView.width
+                    height: swipeView.height
+                    radius: Appearance.rounding.small
+                }
+            }
+
+            ScrollEdgeFade {
+                target: booruResponseListView
+                vertical: true
+            }
+
             StyledListView { // Booru responses
                 id: booruResponseListView
                 anchors.fill: parent
@@ -141,16 +165,6 @@ Item {
                 mouseScrollFactor: Config.options.interactions.scrolling.mouseScrollFactor * 1.4
 
                 property int lastResponseLength: 0
-
-                clip: true
-                layer.enabled: true
-                layer.effect: OpacityMask {
-                    maskSource: Rectangle {
-                        width: swipeView.width
-                        height: swipeView.height
-                        radius: Appearance.rounding.small
-                    }
-                }
 
                 model: ScriptModel {
                     values: {

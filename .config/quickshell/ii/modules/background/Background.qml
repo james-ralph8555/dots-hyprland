@@ -3,10 +3,12 @@ pragma ComponentBehavior: Bound
 import qs
 import qs.services
 import qs.modules.common
+import qs.modules.common.models
 import qs.modules.common.widgets
 import qs.modules.common.functions as CF
 import QtQuick
 import QtQuick.Layouts
+import Qt5Compat.GraphicalEffects
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
@@ -301,7 +303,7 @@ Scope {
                 scale: opacity
                 visible: opacity > 0
                 Behavior on opacity {
-                    animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                    animation: Appearance.animation.elementMoveEnter.numberAnimation.createObject(this)
                 }
                 text: "Enter password"
                 color: CF.ColorUtils.transparentize(bgRoot.colText, 0.3)

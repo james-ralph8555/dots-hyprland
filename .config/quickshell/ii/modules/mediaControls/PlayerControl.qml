@@ -1,4 +1,5 @@
 import qs.modules.common
+import qs.modules.common.models
 import qs.modules.common.widgets
 import qs.services
 import qs.modules.common.functions
@@ -22,6 +23,7 @@ Item { // Player instance
     property list<real> visualizerPoints: []
     property real maxVisualizerValue: 1000 // Max value in the data points
     property int visualizerSmoothing: 2 // Number of points to average for smoothing
+    property real radius
 
     component TrackChangeButton: RippleButton {
         implicitWidth: 24
@@ -45,9 +47,9 @@ Item { // Player instance
         }
     }
 
-    Timer { // Force update for prevision
+    Timer { // Force update for revision
         running: playerController.player?.playbackState == MprisPlaybackState.Playing
-        interval: 1000
+        interval: Config.options.resources.updateInterval
         repeat: true
         onTriggered: {
             playerController.player.positionChanged()
@@ -81,22 +83,8 @@ Item { // Player instance
         rescaleSize: 1 // Rescale to 1x1 pixel for faster processing
     }
 
-    property bool backgroundIsDark: artDominantColor.hslLightness < 0.5
-    property QtObject blendedColors: QtObject {
-        property color colLayer0: ColorUtils.mix(Appearance.colors.colLayer0, artDominantColor, (backgroundIsDark && Appearance.m3colors.darkmode) ? 0.6 : 0.5)
-        property color colLayer1: ColorUtils.mix(Appearance.colors.colLayer1, artDominantColor, 0.5)
-        property color colOnLayer0: ColorUtils.mix(Appearance.colors.colOnLayer0, artDominantColor, 0.5)
-        property color colOnLayer1: ColorUtils.mix(Appearance.colors.colOnLayer1, artDominantColor, 0.5)
-        property color colSubtext: ColorUtils.mix(Appearance.colors.colOnLayer1, artDominantColor, 0.5)
-        property color colPrimary: ColorUtils.mix(ColorUtils.adaptToAccent(Appearance.colors.colPrimary, artDominantColor), artDominantColor, 0.5)
-        property color colPrimaryHover: ColorUtils.mix(ColorUtils.adaptToAccent(Appearance.colors.colPrimaryHover, artDominantColor), artDominantColor, 0.3)
-        property color colPrimaryActive: ColorUtils.mix(ColorUtils.adaptToAccent(Appearance.colors.colPrimaryActive, artDominantColor), artDominantColor, 0.3)
-        property color colSecondaryContainer: ColorUtils.mix(Appearance.m3colors.m3secondaryContainer, artDominantColor, 0.15)
-        property color colSecondaryContainerHover: ColorUtils.mix(Appearance.colors.colSecondaryContainerHover, artDominantColor, 0.3)
-        property color colSecondaryContainerActive: ColorUtils.mix(Appearance.colors.colSecondaryContainerActive, artDominantColor, 0.5)
-        property color colOnPrimary: ColorUtils.mix(ColorUtils.adaptToAccent(Appearance.m3colors.m3onPrimary, artDominantColor), artDominantColor, 0.5)
-        property color colOnSecondaryContainer: ColorUtils.mix(Appearance.m3colors.m3onSecondaryContainer, artDominantColor, 0.5)
-
+    property QtObject blendedColors: AdaptedMaterialScheme {
+        color: artDominantColor
     }
 
     StyledRectangularShadow {
@@ -107,7 +95,7 @@ Item { // Player instance
         anchors.fill: parent
         anchors.margins: Appearance.sizes.elevationMargin
         color: blendedColors.colLayer0
-        radius: root.popupRounding
+        radius: playerController.radius
 
         layer.enabled: true
         layer.effect: OpacityMask {
@@ -130,18 +118,14 @@ Item { // Player instance
             asynchronous: true
 
             layer.enabled: true
-            layer.effect: MultiEffect {
+            layer.effect: StyledBlurEffect {
                 source: blurredArt
-                saturation: 0.2
-                blurEnabled: true
-                blurMax: 100
-                blur: 1
             }
 
             Rectangle {
                 anchors.fill: parent
                 color: ColorUtils.transparentize(blendedColors.colLayer0, 0.3)
-                radius: root.popupRounding
+                radius: playerController.radius
             }
         }
 
@@ -205,6 +189,9 @@ Item { // Player instance
                     color: blendedColors.colOnLayer0
                     elide: Text.ElideRight
                     text: StringUtils.cleanMusicTitle(playerController.player?.trackTitle) || "Untitled"
+                    animateChange: true
+                    animationDistanceX: 6
+                    animationDistanceY: 0
                 }
                 StyledText {
                     id: trackArtist
@@ -213,6 +200,9 @@ Item { // Player instance
                     color: blendedColors.colSubtext
                     elide: Text.ElideRight
                     text: playerController.player?.trackArtist
+                    animateChange: true
+                    animationDistanceX: 6
+                    animationDistanceY: 0
                 }
                 Item { Layout.fillHeight: true }
                 Item {

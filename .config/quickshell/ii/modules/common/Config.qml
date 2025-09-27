@@ -82,7 +82,7 @@ Singleton {
                 property bool extraBackgroundTint: true
                 property int fakeScreenRounding: 2 // 0: None | 1: Always | 2: When not fullscreen
                 property JsonObject transparency: JsonObject {
-                    property bool enable: true
+                    property bool enable: false
                     property bool automatic: true
                     property real backgroundTransparency: 0.11
                     property real contentTransparency: 0.57
@@ -91,6 +91,12 @@ Singleton {
                     property bool enableAppsAndShell: true
                     property bool enableQtApps: true
                     property bool enableTerminal: true
+                    property JsonObject terminalGenerationProps: JsonObject {
+                        property real harmony: 0.6
+                        property real harmonizeThreshold: 100
+                        property real termFgBoost: 0.35
+                        property bool forceDarkMode: false
+                    }
                 }
                 property JsonObject palette: JsonObject {
                     property string type: "auto" // Allowed: auto, scheme-content, scheme-expressive, scheme-fidelity, scheme-fruit-salad, scheme-monochrome, scheme-neutral, scheme-rainbow, scheme-tonal-spot
@@ -101,38 +107,46 @@ Singleton {
                 // Values in %
                 property JsonObject protection: JsonObject {
                     // Prevent sudden bangs
-                    property bool enable: true
+                    property bool enable: false
                     property real maxAllowedIncrease: 10
-                    property real maxAllowed: 90 // Realistically should already provide some protection when it's 99...
+                    property real maxAllowed: 99
                 }
             }
 
             property JsonObject apps: JsonObject {
                 property string bluetooth: "kcmshell6 kcm_bluetooth"
-                property string network: "plasmawindowed org.kde.plasma.networkmanagement"
+                property string network: "kitty -1 fish -c nmtui"
                 property string networkEthernet: "kcmshell6 kcm_networkmanagement"
                 property string taskManager: "plasma-systemmonitor --page-name Processes"
                 property string terminal: "kitty -1" // This is only for shell actions
             }
 
             property JsonObject background: JsonObject {
-                property bool fixedClockPosition: false
-                property real clockX: -500
-                property real clockY: -500
+                property JsonObject clock: JsonObject {
+                    property bool fixedPosition: false
+                    property real x: -500
+                    property real y: -500
+                    property bool show: true
+                    property string style: "cookie" // Options: "cookie", "digital"
+                    property real scale: 1
+                }
                 property string wallpaperPath: ""
                 property string thumbnailPath: ""
+                property string quote: ""
+                property bool hideWhenFullscreen: true
                 property JsonObject parallax: JsonObject {
+                    property bool vertical: false
+                    property bool autoVertical: false
                     property bool enableWorkspace: true
                     property real workspaceZoom: 1.07 // Relative to your screen, not wallpaper size
                     property bool enableSidebar: true
                 }
-                property string mantra: ""
-                property bool hideWhenFullscreen: true
             }
 
             property JsonObject bar: JsonObject {
                 property JsonObject autoHide: JsonObject {
                     property bool enable: false
+                    property int hoverRegionWidth: 2
                     property bool pushWindows: false
                     property JsonObject showWhenPressingSuper: JsonObject {
                         property bool enable: true
@@ -148,7 +162,10 @@ Singleton {
                 property bool vertical: false
                 property JsonObject resources: JsonObject {
                     property bool alwaysShowSwap: true
-                    property bool alwaysShowCpu: false
+                    property bool alwaysShowCpu: true
+                    property int memoryWarningThreshold: 95
+                    property int swapWarningThreshold: 85
+                    property int cpuWarningThreshold: 90
                 }
                 property list<string> screenList: [] // List of names, like "eDP-1", find out with 'hyprctl monitors' command
                 property JsonObject utilButtons: JsonObject {
@@ -161,6 +178,9 @@ Singleton {
                 }
                 property JsonObject tray: JsonObject {
                     property bool monochromeIcons: true
+                    property bool showItemId: false
+                    property bool invertPinnedItems: true // Makes the below a whitelist for the tray and blacklist for the pinned area
+                    property list<string> pinnedItems: [ ]
                 }
                 property JsonObject workspaces: JsonObject {
                     property bool monochromeIcons: true
@@ -168,6 +188,8 @@ Singleton {
                     property bool showAppIcons: true
                     property bool alwaysShowNumbers: false
                     property int showNumberDelay: 300 // milliseconds
+                    property list<string> numberMap: ["1", "2"] // Characters to show instead of numbers on workspace indicator
+                    property bool useNerdFont: false
                 }
                 property JsonObject weather: JsonObject {
                     property bool enable: false
@@ -190,6 +212,11 @@ Singleton {
                 property bool autoKillTrays: false
             }
 
+            property JsonObject crosshair: JsonObject {
+                // Valorant crosshair format. Use https://www.vcrdb.net/builder
+                property string code: "0;P;d;1;0l;10;0o;2;1b;0"
+            }
+
             property JsonObject dock: JsonObject {
                 property bool enable: false
                 property bool monochromeIcons: true
@@ -209,9 +236,13 @@ Singleton {
                     property int mouseScrollFactor: 120
                     property int touchpadScrollFactor: 450
                 }
+                property JsonObject deadPixelWorkaround: JsonObject { // Hyprland leaves out 1 pixel on the right for interactions
+                    property bool enable: false
+                }
             }
 
             property JsonObject language: JsonObject {
+                property string ui: "auto" // UI language. "auto" for system locale, or specific language code like "zh_CN", "en_US"
                 property JsonObject translator: JsonObject {
                     property string engine: "auto" // Run `trans -list-engines` for available engines. auto should use google
                     property string targetLanguage: "auto" // Run `trans -list-all` for available languages
@@ -228,6 +259,16 @@ Singleton {
                 }
             }
 
+            property JsonObject lock: JsonObject {
+                property JsonObject blur: JsonObject {
+                    property bool enable: false
+                    property real radius: 100
+                    property real extraZoom: 1.1
+                }
+                property bool centerClock: true
+                property bool showLockedText: true
+            }
+
             property JsonObject media: JsonObject {
                 // Attempt to remove dupes (the aggregator playerctl one and browsers' native ones when there's plasma browser integration)
                 property bool filterDuplicatePlayers: true
@@ -235,6 +276,10 @@ Singleton {
 
             property JsonObject networking: JsonObject {
                 property string userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36"
+            }
+
+            property JsonObject notifications: JsonObject {
+                property int timeout: 7000
             }
 
             property JsonObject osd: JsonObject {
@@ -263,9 +308,13 @@ Singleton {
                 property list<string> excludedSites: ["quora.com"]
                 property bool sloppy: false // Uses levenshtein distance based scoring instead of fuzzy sort. Very weird.
                 property JsonObject prefix: JsonObject {
+                    property bool showDefaultActionsWithoutPrefix: true
                     property string action: "/"
                     property string clipboard: ";"
                     property string emojis: ":"
+                    property string math: "="
+                    property string shellCommand: "$"
+                    property string webSearch: "?"
                 }
             }
 
@@ -282,6 +331,15 @@ Singleton {
                         property string username: "[unset]"
                     }
                 }
+                property JsonObject cornerOpen: JsonObject {
+                    property bool enable: true
+                    property bool bottom: false
+                    property bool valueScroll: true
+                    property bool clickless: false
+                    property real cornerRegionWidth: 60
+                    property real cornerRegionHeight: 2
+                    property bool visualize: false
+                }
             }
 
             property JsonObject time: JsonObject {
@@ -297,7 +355,11 @@ Singleton {
                     property int longBreak: 900
                 }
             }
-
+            
+            property JsonObject wallpaperSelector: JsonObject {
+                property bool useSystemFileDialog: false
+            }
+            
             property JsonObject windows: JsonObject {
                 property bool showTitlebar: true // Client-side decoration for shell apps
                 property bool centerTitle: true
@@ -309,6 +371,18 @@ Singleton {
 
             property JsonObject screenshotTool: JsonObject {
                 property bool showContentRegions: true
+            }
+
+            property JsonObject workSafety: JsonObject {
+                property JsonObject enable: JsonObject {
+                    property bool wallpaper: true
+                    property bool clipboard: true
+                }
+                property JsonObject triggerCondition: JsonObject {
+                    property list<string> networkNameKeywords: ["airport", "cafe", "college", "company", "eduroam", "free", "guest", "public", "school", "university"]
+                    property list<string> fileKeywords: ["anime", "ecchi", "hentai", "yande.re", "konachan", "breast", "nipples", "pussy", "nsfw", "spoiler", "girl"]
+                    property list<string> linkKeywords: ["hentai", "porn", "sukebei", "hitomi.la", "rule34", "gelbooru", "fanbox", "dlsite"]
+                }
             }
         }
     }

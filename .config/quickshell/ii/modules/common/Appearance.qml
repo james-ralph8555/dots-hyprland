@@ -146,15 +146,21 @@ Singleton {
         property color colPrimaryHover: ColorUtils.mix(colors.colPrimary, colLayer1Hover, 0.87)
         property color colPrimaryActive: ColorUtils.mix(colors.colPrimary, colLayer1Active, 0.7)
         property color colPrimaryContainer: m3colors.m3primaryContainer
-        property color colPrimaryContainerHover: ColorUtils.mix(colors.colPrimaryContainer, colLayer1Hover, 0.7)
-        property color colPrimaryContainerActive: ColorUtils.mix(colors.colPrimaryContainer, colLayer1Active, 0.6)
+        property color colPrimaryContainerHover: ColorUtils.mix(colors.colPrimaryContainer, colors.colOnPrimaryContainer, 0.9)
+        property color colPrimaryContainerActive: ColorUtils.mix(colors.colPrimaryContainer, colors.colOnPrimaryContainer, 0.8)
         property color colOnPrimaryContainer: m3colors.m3onPrimaryContainer
         property color colSecondary: m3colors.m3secondary
         property color colSecondaryHover: ColorUtils.mix(m3colors.m3secondary, colLayer1Hover, 0.85)
         property color colSecondaryActive: ColorUtils.mix(m3colors.m3secondary, colLayer1Active, 0.4)
         property color colSecondaryContainer: m3colors.m3secondaryContainer
         property color colSecondaryContainerHover: ColorUtils.mix(m3colors.m3secondaryContainer, m3colors.m3onSecondaryContainer, 0.90)
-        property color colSecondaryContainerActive: ColorUtils.mix(m3colors.m3secondaryContainer, colLayer1Active, 0.54)
+        property color colSecondaryContainerActive: ColorUtils.mix(m3colors.m3secondaryContainer, m3colors.m3onSecondaryContainer, 0.54)
+        property color colTertiary: m3colors.m3tertiary
+        property color colTertiaryHover: ColorUtils.mix(m3colors.m3tertiary, colLayer1Hover, 0.85)
+        property color colTertiaryActive: ColorUtils.mix(m3colors.m3tertiary, colLayer1Active, 0.4)
+        property color colTertiaryContainer: m3colors.m3tertiaryContainer
+        property color colTertiaryContainerHover: ColorUtils.mix(m3colors.m3tertiaryContainer, m3colors.m3onTertiaryContainer, 0.90)
+        property color colTertiaryContainerActive: ColorUtils.mix(m3colors.m3tertiaryContainer, colLayer1Active, 0.54)
         property color colOnSecondaryContainer: m3colors.m3onSecondaryContainer
         property color colSurfaceContainerLow: ColorUtils.transparentize(m3colors.m3surfaceContainerLow, root.contentTransparency)
         property color colSurfaceContainer: ColorUtils.transparentize(m3colors.m3surfaceContainer, root.contentTransparency)
@@ -168,6 +174,7 @@ Singleton {
         property color colOnTooltip: m3colors.m3inverseOnSurface
         property color colScrim: ColorUtils.transparentize(m3colors.m3scrim, 0.5)
         property color colShadow: ColorUtils.transparentize(m3colors.m3shadow, 0.7)
+        property color colOutline: m3colors.m3outline
         property color colOutlineVariant: m3colors.m3outlineVariant
         property color colError: m3colors.m3error
         property color colErrorHover: ColorUtils.mix(m3colors.m3error, colLayer1Hover, 0.85)
@@ -205,6 +212,7 @@ Singleton {
         property QtObject pixelSize: QtObject {
             property int smallest: 10
             property int smaller: 12
+            property int smallie: 13
             property int small: 15
             property int normal: 16
             property int large: 17
@@ -247,14 +255,8 @@ Singleton {
                     easing.bezierCurve: root.animation.elementMove.bezierCurve
                 }
             }
-            property Component colorAnimation: Component {
-                ColorAnimation {
-                    duration: root.animation.elementMove.duration
-                    easing.type: root.animation.elementMove.type
-                    easing.bezierCurve: root.animation.elementMove.bezierCurve
-                }
-            }
         }
+
         property QtObject elementMoveEnter: QtObject {
             property int duration: 400
             property int type: Easing.BezierSpline
@@ -268,6 +270,7 @@ Singleton {
                 }
             }
         }
+
         property QtObject elementMoveExit: QtObject {
             property int duration: 200
             property int type: Easing.BezierSpline
@@ -281,6 +284,7 @@ Singleton {
                 }
             }
         }
+
         property QtObject elementMoveFast: QtObject {
             property int duration: animationCurves.expressiveEffectsDuration
             property int type: Easing.BezierSpline
@@ -297,6 +301,21 @@ Singleton {
                     easing.bezierCurve: root.animation.elementMoveFast.bezierCurve
             }}
         }
+
+        property QtObject elementResize: QtObject {
+            property int duration: 400
+            property int type: Easing.BezierSpline
+            property list<real> bezierCurve: animationCurves.emphasized
+            property int velocity: 650
+            property Component numberAnimation: Component {
+                NumberAnimation {
+                    duration: root.animation.elementResize.duration
+                    easing.type: root.animation.elementResize.type
+                    easing.bezierCurve: root.animation.elementResize.bezierCurve
+                }
+            }
+        }
+
         property QtObject clickBounce: QtObject {
             property int duration: 200
             property int type: Easing.BezierSpline
@@ -308,11 +327,13 @@ Singleton {
                     easing.bezierCurve: root.animation.clickBounce.bezierCurve
             }}
         }
+        
         property QtObject scroll: QtObject {
             property int duration: 200
             property int type: Easing.BezierSpline
             property list<real> bezierCurve: animationCurves.standardDecel
         }
+
         property QtObject menuDecel: QtObject {
             property int duration: 350
             property int type: Easing.OutExpo
@@ -343,6 +364,10 @@ Singleton {
         property real baseVerticalBarWidth: 46
         property real verticalBarWidth: Config.options.bar.cornerStyle === 1 ? 
             (baseVerticalBarWidth + root.sizes.hyprlandGapsOut * 2) : baseVerticalBarWidth
+        property real wallpaperSelectorWidth: 1200
+        property real wallpaperSelectorHeight: 690
+        property real wallpaperSelectorItemMargins: 8
+        property real wallpaperSelectorItemPadding: 6
     }
 
     syntaxHighlightingTheme: root.m3colors.darkmode ? "Monokai" : "ayu Light"

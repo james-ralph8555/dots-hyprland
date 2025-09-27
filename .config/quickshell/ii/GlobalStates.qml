@@ -10,6 +10,7 @@ pragma ComponentBehavior: Bound
 Singleton {
     id: root
     property bool barOpen: true
+    property bool crosshairOpen: false
     property bool sidebarLeftOpen: false
     property bool sidebarRightOpen: false
     property bool mediaControlsOpen: false
@@ -17,6 +18,7 @@ Singleton {
     property bool osdVolumeOpen: false
     property bool oskOpen: false
     property bool overviewOpen: false
+    property bool wallpaperSelectorOpen: false
     property bool screenLocked: false
     property bool screenLockContainsCharacters: false
     property bool screenUnlockFailed: false

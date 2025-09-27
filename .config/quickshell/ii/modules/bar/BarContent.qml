@@ -82,38 +82,10 @@ Item { // Bar content region
             anchors.fill: parent
             spacing: 10
 
-            RippleButton {
-                // Left sidebar button
-                Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
+            LeftSidebarButton { // Left sidebar button
+                Layout.alignment: Qt.AlignVCenter
                 Layout.leftMargin: Appearance.rounding.screenRounding
-                Layout.fillWidth: false
-                property real buttonPadding: 5
-                implicitWidth: distroIcon.width + buttonPadding * 2
-                implicitHeight: distroIcon.height + buttonPadding * 2
-
-                buttonRadius: Appearance.rounding.full
                 colBackground: barLeftSideMouseArea.hovered ? Appearance.colors.colLayer1Hover : ColorUtils.transparentize(Appearance.colors.colLayer1Hover, 1)
-                colBackgroundHover: Appearance.colors.colLayer1Hover
-                colRipple: Appearance.colors.colLayer1Active
-                colBackgroundToggled: Appearance.colors.colSecondaryContainer
-                colBackgroundToggledHover: Appearance.colors.colSecondaryContainerHover
-                colRippleToggled: Appearance.colors.colSecondaryContainerActive
-                toggled: GlobalStates.sidebarLeftOpen
-                property color colText: toggled ? Appearance.m3colors.m3onSecondaryContainer : Appearance.colors.colOnLayer0
-
-                onPressed: {
-                    GlobalStates.sidebarLeftOpen = !GlobalStates.sidebarLeftOpen;
-                }
-
-                CustomIcon {
-                    id: distroIcon
-                    anchors.centerIn: parent
-                    width: 19.5
-                    height: 19.5
-                    source: Config.options.bar.topLeftIcon == 'distro' ? SystemInfo.distroIcon : `${Config.options.bar.topLeftIcon}-symbolic`
-                    colorize: true
-                    color: Appearance.colors.colOnLayer0
-                }
             }
 
             ActiveWindow {
@@ -157,7 +129,6 @@ Item { // Bar content region
         BarGroup {
             id: middleCenterGroup
             padding: workspacesWidget.widgetPadding
-            Layout.fillHeight: true
 
             Workspaces {
                 id: workspacesWidget
@@ -185,7 +156,6 @@ Item { // Bar content region
             implicitWidth: rightCenterGroupContent.implicitWidth
             implicitHeight: rightCenterGroupContent.implicitHeight
             Layout.preferredWidth: root.centerSideModuleWidth
-            Layout.fillHeight: true
 
             onPressed: {
                 GlobalStates.sidebarRightOpen = !GlobalStates.sidebarRightOpen;
@@ -319,15 +289,9 @@ Item { // Bar content region
                             color: rightSidebarButton.colText
                         }
                     }
-                    Loader {
-                        active: HyprlandXkb.layoutCodes.length > 1
-                        visible: active
+                    HyprlandXkbIndicator {
+                        Layout.alignment: Qt.AlignVCenter
                         Layout.rightMargin: indicatorsRowLayout.realSpacing
-                        sourceComponent: StyledText {
-                            text: HyprlandXkb.currentLayoutCode
-                            font.pixelSize: Appearance.font.pixelSize.small
-                            color: rightSidebarButton.colText
-                        }
                     }
                     MaterialSymbol {
                         Layout.rightMargin: indicatorsRowLayout.realSpacing
@@ -336,7 +300,7 @@ Item { // Bar content region
                         color: rightSidebarButton.colText
                     }
                     MaterialSymbol {
-                        text: Bluetooth.bluetoothConnected ? "bluetooth_connected" : Bluetooth.bluetoothEnabled ? "bluetooth" : "bluetooth_disabled"
+                        text: BluetoothStatus.connected ? "bluetooth_connected" : BluetoothStatus.enabled ? "bluetooth" : "bluetooth_disabled"
                         iconSize: Appearance.font.pixelSize.larger
                         color: rightSidebarButton.colText
                     }
@@ -347,6 +311,7 @@ Item { // Bar content region
                 visible: root.useShortenedForm === 0
                 Layout.fillWidth: false
                 Layout.fillHeight: true
+                invertSide: Config?.options.bar.bottom
             }
 
             Item {
@@ -356,8 +321,7 @@ Item { // Bar content region
 
             // Weather
             Loader {
-                Layout.leftMargin: 8
-                Layout.fillHeight: true
+                Layout.leftMargin: 4
                 active: Config.options.bar.weather.enable
 
                 sourceComponent: BarGroup {

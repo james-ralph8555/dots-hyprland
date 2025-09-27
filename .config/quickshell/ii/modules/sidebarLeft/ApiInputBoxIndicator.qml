@@ -26,6 +26,7 @@ Item { // Model indicator
             color: Appearance.m3colors.m3onSurface
             elide: Text.ElideRight
             text: root.text
+            animateChange: true
         }
     }
 
@@ -40,7 +41,7 @@ Item { // Model indicator
                 id: toolTip
                 extraVisibleCondition: false
                 alternativeVisibleCondition: mouseArea.containsMouse // Show tooltip when hovered
-                content: root.tooltipText
+                text: root.tooltipText
             }
         }
     }

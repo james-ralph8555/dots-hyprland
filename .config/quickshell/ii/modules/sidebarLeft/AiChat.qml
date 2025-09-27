@@ -9,6 +9,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Qt5Compat.GraphicalEffects
 import Quickshell
+import Quickshell.Io
 
 Item {
     id: root
@@ -38,6 +39,13 @@ Item {
     }
 
     property var allCommands: [
+        {
+            name: "attach",
+            description: Translation.tr("Attach a file. Only works with Gemini."),
+            execute: (args) => {
+                Ai.attachFile(args.join(" ").trim());
+            }
+        },
         {
             name: "model",
             description: Translation.tr("Choose model"),
@@ -201,6 +209,29 @@ Inline w/ backslash and round brackets \\(e^{i\\pi} + 1 = 0\\)
         else {
             Ai.sendUserMessage(inputText);
         }
+        
+        // Always scroll to bottom when user sends a message
+        messageListView.positionViewAtEnd()
+    }
+
+    Process {
+        id: decodeImageAndAttachProc
+        property string imageDecodePath: Directories.cliphistDecode
+        property string imageDecodeFileName: "image"
+        property string imageDecodeFilePath: `${imageDecodePath}/${imageDecodeFileName}`
+        function handleEntry(entry: string) {
+            imageDecodeFileName = parseInt(entry.match(/^(\d+)\t/)[1])
+            decodeImageAndAttachProc.exec(["bash", "-c", 
+                `[ -f ${imageDecodeFilePath} ] || echo '${StringUtils.shellSingleQuoteEscape(entry)}' | ${Cliphist.cliphistBinary} decode > '${imageDecodeFilePath}'`
+            ])
+        }
+        onExited: (exitCode, exitStatus) => {
+            if (exitCode === 0) {
+                Ai.attachFile(imageDecodeFilePath);
+            } else {
+                console.error("[AiChat] Failed to decode image in clipboard content")
+            }
+        }
     }
 
     component StatusItem: MouseArea {
@@ -224,11 +255,12 @@ Inline w/ backslash and round brackets \\(e^{i\\pi} + 1 = 0\\)
                 font.pixelSize: Appearance.font.pixelSize.small
                 text: statusItem.statusText
                 color: Appearance.colors.colSubtext
+                animateChange: true
             }
         }
 
         StyledToolTip {
-            content: statusItem.description
+            text: statusItem.description
             extraVisibleCondition: false
             alternativeVisibleCondition: statusItem.containsMouse
         }
@@ -276,6 +308,20 @@ Inline w/ backslash and round brackets \\(e^{i\\pi} + 1 = 0\\)
         Item { // Messages
             Layout.fillWidth: true
             Layout.fillHeight: true
+            layer.enabled: true
+            layer.effect: OpacityMask {
+                maskSource: Rectangle {
+                    width: swipeView.width
+                    height: swipeView.height
+                    radius: Appearance.rounding.small
+                }
+            }
+
+            ScrollEdgeFade {
+                target: messageListView
+                vertical: true
+            }
+
             StyledListView { // Message list
                 id: messageListView
                 anchors.fill: parent
@@ -286,15 +332,14 @@ Inline w/ backslash and round brackets \\(e^{i\\pi} + 1 = 0\\)
                 mouseScrollFactor: Config.options.interactions.scrolling.mouseScrollFactor * 1.4
 
                 property int lastResponseLength: 0
+                property bool shouldAutoScroll: true
 
-                clip: true
-                layer.enabled: true
-                layer.effect: OpacityMask {
-                    maskSource: Rectangle {
-                        width: swipeView.width
-                        height: swipeView.height
-                        radius: Appearance.rounding.small
-                    }
+                onContentYChanged: shouldAutoScroll = atYEnd
+                onContentHeightChanged: {
+                    if (shouldAutoScroll) positionViewAtEnd();
+                }
+                onCountChanged: { // Auto-scroll when new messages are added
+                    if (shouldAutoScroll) positionViewAtEnd();
                 }
 
                 add: null // Prevent function calls from being janky
@@ -420,13 +465,13 @@ Inline w/ backslash and round brackets \\(e^{i\\pi} + 1 = 0\\)
 
         Rectangle { // Input area
             id: inputWrapper
-            property real columnSpacing: 5
+            property real spacing: 5
             Layout.fillWidth: true
             radius: Appearance.rounding.small
             color: Appearance.colors.colLayer1
-            implicitWidth: messageInputField.implicitWidth
-            implicitHeight: Math.max(inputFieldRowLayout.implicitHeight + inputFieldRowLayout.anchors.topMargin 
-                + commandButtonsRow.implicitHeight + commandButtonsRow.anchors.bottomMargin + columnSpacing, 45)
+            implicitHeight: Math.max(inputFieldRowLayout.implicitHeight + inputFieldRowLayout.anchors.topMargin
+                + commandButtonsRow.implicitHeight + commandButtonsRow.anchors.bottomMargin + spacing, 45)
+                + (attachedFileIndicator.implicitHeight + spacing + attachedFileIndicator.anchors.topMargin)
             clip: true
             border.color: Appearance.colors.colOutlineVariant
             border.width: 1
@@ -435,12 +480,26 @@ Inline w/ backslash and round brackets \\(e^{i\\pi} + 1 = 0\\)
                 animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
             }
 
+            AttachedFileIndicator {
+                id: attachedFileIndicator
+                anchors {
+                    top: parent.top
+                    left: parent.left
+                    right: parent.right
+                    margins: visible ? 5 : 0
+                }
+                filePath: Ai.pendingFilePath
+                onRemove: Ai.attachFile("")
+            }
+
             RowLayout { // Input field and send button
                 id: inputFieldRowLayout
-                anchors.top: parent.top
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.topMargin: 5
+                anchors {
+                    top: attachedFileIndicator.bottom
+                    left: parent.left
+                    right: parent.right
+                    topMargin: 5
+                }
                 spacing: 0
 
                 StyledTextArea { // The actual TextArea
@@ -587,6 +646,22 @@ Inline w/ backslash and round brackets \\(e^{i\\pi} + 1 = 0\\)
                                 messageInputField.clear()
                                 root.handleInput(inputText)
                                 event.accepted = true
+                            }
+                        } else if ((event.modifiers & Qt.ControlModifier) && event.key === Qt.Key_V) { // Intercept Ctrl+V to handle image pasting
+                            // Try image paste first
+                            const currentClipboardEntry = Cliphist.entries[0]
+                            if (/^\d+\t\[\[.*binary data.*\d+x\d+.*\]\]$/.test(currentClipboardEntry)) { // First entry = currently copied entry = image?
+                                decodeImageAndAttachProc.handleEntry(currentClipboardEntry)
+                                event.accepted = true;
+                                return;
+                            }
+                            event.accepted = false; // No image, let text pasting proceed
+                        } else if (event.key === Qt.Key_Escape) { // Esc to detach file
+                            if (Ai.pendingFilePath.length > 0) {
+                                Ai.attachFile("");
+                                event.accepted = true;
+                            } else {
+                                event.accepted = false;
                             }
                         }
                     }
