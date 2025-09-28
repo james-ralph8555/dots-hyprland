@@ -41,3 +41,5 @@ alias tmux6 'tmux attach -t 6'
 alias tmux7 'tmux attach -t 7'
 alias tmux8 'tmux attach -t 8'
 alias tmux9 'tmux attach -t 9'
+
+end
