@@ -11,8 +11,7 @@ pragma Singleton
 Singleton {
     id: root
 
-    property alias inhibit: idleInhibitor.enabled
-    inhibit: Persistent.states.idle.inhibit
+    property bool inhibit: Persistent.states.idle.inhibit
 
     function toggleInhibit() {
         Persistent.states.idle.inhibit = !Persistent.states.idle.inhibit
