@@ -148,26 +148,40 @@ Scope {
                 }
             }
 
-            // Wallpaper
-            Image {
+            StyledImage {
                 id: wallpaper
-                visible: !bgRoot.wallpaperIsVideo
-                property real value // 0 to 1, for offset
-                value: {
-                    // Range = groups that workspaces span on
-                    const chunkSize = Config?.options.bar.workspaces.shown ?? 10;
-                    const lower = Math.floor(bgRoot.firstWorkspaceId / chunkSize) * chunkSize;
-                    const upper = Math.ceil(bgRoot.lastWorkspaceId / chunkSize) * chunkSize;
-                    const range = upper - lower;
-                    return (Config.options.background.parallax.enableWorkspace ? ((bgRoot.monitor.activeWorkspace.id - lower) / range) : 0.5)
-                        + (0.15 * GlobalStates.sidebarRightOpen * Config.options.background.parallax.enableSidebar)
-                        - (0.15 * GlobalStates.sidebarLeftOpen * Config.options.background.parallax.enableSidebar)
+                visible: opacity > 0 && !blurLoader.active
+                opacity: (status === Image.Ready && !bgRoot.wallpaperIsVideo) ? 1 : 0
+                cache: false
+                smooth: false
+                // Range = groups that workspaces span on
+                property int chunkSize: Config?.options.bar.workspaces.shown ?? 10
+                property int lower: Math.floor(bgRoot.firstWorkspaceId / chunkSize) * chunkSize
+                property int upper: Math.ceil(bgRoot.lastWorkspaceId / chunkSize) * chunkSize
+                property int range: upper - lower
+                property real valueX: {
+                    let result = 0.5;
+                    if (Config.options.background.parallax.enableWorkspace && !bgRoot.verticalParallax) {
+                        result = ((bgRoot.monitor.activeWorkspace?.id - lower) / range);
+                    }
+                    if (Config.options.background.parallax.enableSidebar) {
+                        result += (0.15 * GlobalStates.sidebarRightOpen - 0.15 * GlobalStates.sidebarLeftOpen);
+                    }
+                    return result;
                 }
-                property real effectiveValue: Math.max(0, Math.min(1, value))
-                x: -(bgRoot.movableXSpace) - (effectiveValue - 0.5) * 2 * bgRoot.movableXSpace
-                y: (screen.width < screen.height) ? (bgRoot.height - height) / 2 : -(bgRoot.movableYSpace)
-                source: bgRoot.wallpaperPath
-                fillMode: (screen.width < screen.height) ? Image.PreserveAspectFit : Image.PreserveAspectCrop
+                property real valueY: {
+                    let result = 0.5;
+                    if (Config.options.background.parallax.enableWorkspace && bgRoot.verticalParallax) {
+                        result = ((bgRoot.monitor.activeWorkspace?.id - lower) / range);
+                    }
+                    return result;
+                }
+                property real effectiveValueX: Math.max(0, Math.min(1, valueX))
+                property real effectiveValueY: Math.max(0, Math.min(1, valueY))
+                x: -(bgRoot.movableXSpace) - (effectiveValueX - 0.5) * 2 * bgRoot.movableXSpace
+                y: -(bgRoot.movableYSpace) - (effectiveValueY - 0.5) * 2 * bgRoot.movableYSpace
+                source: bgRoot.wallpaperSafetyTriggered ? "" : bgRoot.wallpaperPath
+                fillMode: Image.PreserveAspectCrop
                 Behavior on x {
                     NumberAnimation {
                         duration: 600
@@ -227,33 +241,58 @@ Scope {
                         styleColor: Appearance.colors.colShadow
                         text: DateTime.time
                     }
-                    StyledText {
-                        Layout.fillWidth: true
-                        Layout.topMargin: -5
-                        horizontalAlignment: bgRoot.textHorizontalAlignment
-                        font {
-                            family: Appearance.font.family.expressive
-                            pixelSize: 20
-                            weight: Font.DemiBold
+                }
+                transitions: Transition {
+                    AnchorAnimation {
+                        duration: Appearance.animation.elementMove.duration
+                        easing.type: Appearance.animation.elementMove.type
+                        easing.bezierCurve: Appearance.animation.elementMove.bezierCurve
+                    }
+                }
+                sourceComponent: Column {
+                    Loader {
+                        id: digitalClockLoader
+                        visible: root.clockStyle === "digital"
+                        active: visible
+                        sourceComponent: ColumnLayout {
+                            id: clockColumn
+                            spacing: 6
+
+                            ClockText {
+                                font.pixelSize: 90
+                                text: DateTime.time
+                            }
+                            ClockText {
+                                Layout.topMargin: -5
+                                text: DateTime.date
+                            }
+                            StyledText {
+                                // Somehow gets fucked up if made a ClockText???
+                                visible: Config.options.background.quote.length > 0
+                                Layout.fillWidth: true
+                                horizontalAlignment: bgRoot.textHorizontalAlignment
+                                font {
+                                    family: Appearance.font.family.main
+                                    pixelSize: Appearance.font.pixelSize.normal
+                                    weight: 350
+                                    italic: true
+                                }
+                                color: bgRoot.colText
+                                style: Text.Raised
+                                styleColor: Appearance.colors.colShadow
+                                text: Config.options.background.quote
+                            }
                         }
                         color: bgRoot.colText
                         style: Text.Raised
                         styleColor: Appearance.colors.colShadow
                         text: DateTime.date
                     }
-                    StyledText {
-                        Layout.fillWidth: true
-                        horizontalAlignment: bgRoot.textHorizontalAlignment
-                        font {
-                            family: Appearance.font.family.expressive
-                            pixelSize: 20
-                            weight: Font.DemiBold
-                        }
-                        color: bgRoot.colText
-                        style: Text.Raised
-                        visible: Config.options.background.mantra !== ""
-                        styleColor: Appearance.colors.colShadow
-                        text: Config.options.background.mantra
+                    Loader {
+                        id: cookieClockLoader
+                        visible: root.clockStyle === "cookie"
+                        active: visible
+                        sourceComponent: CookieClock {}
                     }
                 }
 
@@ -272,19 +311,51 @@ Scope {
                     Behavior on opacity {
                         animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
                     }
-                    Item { Layout.fillWidth: bgRoot.textHorizontalAlignment !== Text.AlignLeft; implicitWidth: 1 }
-                    MaterialSymbol {
-                        text: "lock"
-                        Layout.fillWidth: false
-                        iconSize: Appearance.font.pixelSize.huge
-                        color: bgRoot.colText
-                    }
-                    StyledText {
-                        Layout.fillWidth: false
-                        text: "Locked"
-                        color: bgRoot.colText
-                        font {
-                            pixelSize: Appearance.font.pixelSize.larger
+                    Rectangle {
+                        id: statusTextBg
+                        anchors.centerIn: parent
+                        clip: true
+                        opacity: (safetyStatusText.shown || lockStatusText.shown) ? 1 : 0
+                        visible: opacity > 0
+                        implicitHeight: statusTextRow.implicitHeight + 5 * 2
+                        implicitWidth: statusTextRow.implicitWidth + 5 * 2
+                        radius: Appearance.rounding.small
+                        color: CF.ColorUtils.transparentize(Appearance.colors.colSecondaryContainer, root.clockStyle === "cookie" ? 0 : 1)
+
+                        Behavior on implicitWidth {
+                            animation: Appearance.animation.elementResize.numberAnimation.createObject(this)
+                        }
+                        Behavior on implicitHeight {
+                            animation: Appearance.animation.elementResize.numberAnimation.createObject(this)
+                        }
+                        Behavior on opacity {
+                            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                        }
+
+                        RowLayout {
+                            id: statusTextRow
+                            anchors.centerIn: parent
+                            spacing: 14
+                            Item {
+                                Layout.fillWidth: bgRoot.textHorizontalAlignment !== Text.AlignLeft
+                                implicitWidth: 1
+                            }
+                            ClockStatusText {
+                                id: safetyStatusText
+                                shown: bgRoot.wallpaperSafetyTriggered
+                                statusIcon: "hide_image"
+                                statusText: Translation.tr("Wallpaper safety enforced")
+                            }
+                            ClockStatusText {
+                                id: lockStatusText
+                                shown: GlobalStates.screenLocked && Config.options.lock.showLockedText
+                                statusIcon: "lock"
+                                statusText: Translation.tr("Locked")
+                            }
+                            Item {
+                                Layout.fillWidth: bgRoot.textHorizontalAlignment !== Text.AlignRight
+                                implicitWidth: 1
+                            }
                         }
                     }
                     Item { Layout.fillWidth: bgRoot.textHorizontalAlignment !== Text.AlignRight; implicitWidth: 1 }
@@ -292,24 +363,48 @@ Scope {
                 }
             }
 
-            // Password prompt
-            StyledText {
-                anchors {
-                    horizontalCenter: parent.horizontalCenter
-                    bottom: parent.bottom
-                    bottomMargin: 30
-                }
-                opacity: (GlobalStates.screenLocked && !GlobalStates.screenLockContainsCharacters) ? 1 : 0
-                scale: opacity
-                visible: opacity > 0
-                Behavior on opacity {
-                    animation: Appearance.animation.elementMoveEnter.numberAnimation.createObject(this)
-                }
-                text: "Enter password"
-                color: CF.ColorUtils.transparentize(bgRoot.colText, 0.3)
-                font {
-                    pixelSize: Appearance.font.pixelSize.normal
-                }
+    // Components
+    component ClockText: StyledText {
+        Layout.fillWidth: true
+        horizontalAlignment: bgRoot.textHorizontalAlignment
+        font {
+            family: Appearance.font.family.expressive
+            pixelSize: 20
+            weight: Font.DemiBold
+        }
+        color: bgRoot.colText
+        style: Text.Raised
+        styleColor: Appearance.colors.colShadow
+        animateChange: true
+    }
+    component ClockStatusText: Row {
+        id: statusTextRow
+        property alias statusIcon: statusIconWidget.text
+        property alias statusText: statusTextWidget.text
+        property bool shown: true
+        property color textColor: root.clockStyle === "cookie" ? Appearance.colors.colOnSecondaryContainer : bgRoot.colText
+        opacity: shown ? 1 : 0
+        visible: opacity > 0
+        Behavior on opacity {
+            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+        }
+        spacing: 4
+        MaterialSymbol {
+            id: statusIconWidget
+            anchors.verticalCenter: statusTextRow.verticalCenter
+            iconSize: Appearance.font.pixelSize.huge
+            color: statusTextRow.textColor
+            style: Text.Raised
+            styleColor: Appearance.colors.colShadow
+        }
+        ClockText {
+            id: statusTextWidget
+            color: statusTextRow.textColor
+            anchors.verticalCenter: statusTextRow.verticalCenter
+            font {
+                family: Appearance.font.family.main
+                pixelSize: Appearance.font.pixelSize.large
+                weight: Font.Normal
             }
         }
     }

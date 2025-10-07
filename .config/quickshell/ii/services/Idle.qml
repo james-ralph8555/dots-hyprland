@@ -14,7 +14,8 @@ Singleton {
     property bool inhibit: Persistent.states.idle.inhibit
 
     function toggleInhibit() {
-        Persistent.states.idle.inhibit = !Persistent.states.idle.inhibit
+        root.inhibit = !root.inhibit
+        Persistent.states.idle.inhibit = root.inhibit
     }
 
     // IdleInhibitor disabled temporarily - Quickshell 0.2.0 compatibility issue
