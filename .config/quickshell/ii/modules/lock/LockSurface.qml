@@ -1,40 +1,31 @@
 import QtQuick
 import QtQuick.Layouts
-import Qt5Compat.GraphicalEffects
+import Quickshell.Services.UPower
 import qs
 import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.common.functions
+import qs.modules.bar as Bar
+import Quickshell.Services.SystemTray
 
 MouseArea {
     id: root
     required property LockContext context
     property bool active: false
     property bool showInputField: active || context.currentText.length > 0
+    readonly property bool requirePasswordToPower: Config.options.lock.security.requirePasswordToPower
 
+    // Force focus on entry
     function forceFieldFocus() {
         passwordBox.forceActiveFocus();
     }
-
-    Component.onCompleted: {
-        forceFieldFocus();
-    }
-
     Connections {
         target: context
         function onShouldReFocus() {
             forceFieldFocus();
         }
     }
-
-    Keys.onPressed: event => { // Esc to clear
-        if (event.key === Qt.Key_Escape) {
-            root.context.currentText = "";
-        }
-        forceFieldFocus();
-    }
-
     hoverEnabled: true
     acceptedButtons: Qt.LeftButton
     onPressed: mouse => {
@@ -44,7 +35,35 @@ MouseArea {
         forceFieldFocus();
     }
 
-    anchors.fill: parent
+    // Toolbar appearing animation
+    property real toolbarScale: 0.9
+    property real toolbarOpacity: 0
+    Behavior on toolbarScale {
+        NumberAnimation {
+            duration: Appearance.animation.elementMove.duration
+            easing.type: Appearance.animation.elementMove.type
+            easing.bezierCurve: Appearance.animationCurves.expressiveFastSpatial
+        }
+    }
+    Behavior on toolbarOpacity {
+        animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+    }
+
+    // Init
+    Component.onCompleted: {
+        forceFieldFocus();
+        toolbarScale = 1;
+        toolbarOpacity = 1;
+    }
+
+    // Key presses
+    Keys.onPressed: event => {
+        root.context.resetClearTimer();
+        if (event.key === Qt.Key_Escape) { // Esc to clear
+            root.context.currentText = "";
+        }
+        forceFieldFocus();
+    }
 
     // RippleButton {
     //     anchors {
@@ -55,14 +74,18 @@ MouseArea {
     //     }
     //     implicitHeight: 40
     //     colBackground: Appearance.colors.colLayer2
-    //     onClicked: context.unlocked()
+    //     onClicked: {
+    //         context.unlocked(LockContext.ActionEnum.Unlock);
+    //         GlobalStates.screenLocked = false;
+    //     }
     //     contentItem: StyledText {
     //         text: "[[ DEBUG BYPASS ]]"
     //     }
     // }
 
-    // Controls
+    // Main toolbar: password box
     Toolbar {
+        id: mainIsland
         anchors {
             horizontalCenter: parent.horizontalCenter
             bottom: parent.bottom
@@ -72,38 +95,8 @@ MouseArea {
             animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
         }
 
-        scale: 0.9
-        opacity: 0
-        Component.onCompleted: {
-            scale = 1
-            opacity = 1
-        }
-        Behavior on scale {
-            NumberAnimation {
-                duration: Appearance.animation.elementMove.duration
-                easing.type: Appearance.animation.elementMove.type
-                easing.bezierCurve: Appearance.animationCurves.expressiveFastSpatial
-            }
-        }
-        Behavior on opacity {
-            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
-        }
-
-        ToolbarButton {
-            id: sleepButton
-            implicitWidth: height
-
-            onClicked: Session.suspend()
-
-            contentItem: MaterialSymbol {
-                anchors.centerIn: parent
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-                iconSize: 24
-                text: "dark_mode"
-                color: Appearance.colors.colOnPrimaryContainer
-            }
-        }
+        scale: root.toolbarScale
+        opacity: root.toolbarOpacity
 
         ToolbarTextField {
             id: passwordBox
@@ -127,6 +120,10 @@ MouseArea {
                     passwordBox.text = root.context.currentText;
                 }
             }
+
+            Keys.onPressed: event => {
+                root.context.resetClearTimer();
+            }
         }
 
         ToolbarButton {
@@ -143,9 +140,181 @@ MouseArea {
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
                 iconSize: 24
-                text: "arrow_right_alt"
+                text: {
+                    if (root.context.targetAction === LockContext.ActionEnum.Unlock) {
+                        return "arrow_right_alt";
+                    } else if (root.context.targetAction === LockContext.ActionEnum.Poweroff) {
+                        return "power_settings_new";
+                    } else if (root.context.targetAction === LockContext.ActionEnum.Reboot) {
+                        return "restart_alt";
+                    }
+                }
                 color: confirmButton.enabled ? Appearance.colors.colOnPrimary : Appearance.colors.colSubtext
             }
+        }
+    }
+
+    // Left toolbar
+    Toolbar {
+        id: leftIsland
+        anchors {
+            right: mainIsland.left
+            top: mainIsland.top
+            bottom: mainIsland.bottom
+            rightMargin: 10
+        }
+        scale: root.toolbarScale
+        opacity: root.toolbarOpacity
+
+        // Username
+        IconAndTextPair {
+            Layout.leftMargin: 8
+            icon: "account_circle"
+            text: SystemInfo.username
+        }
+
+        // Keyboard layout (Xkb)
+        Loader {
+            Layout.rightMargin: 8
+            Layout.fillHeight: true
+
+            active: true
+            visible: active
+
+            sourceComponent: Row {
+                spacing: 8
+
+                MaterialSymbol {
+                    id: keyboardIcon
+                    anchors.verticalCenter: parent.verticalCenter
+                    fill: 1
+                    text: "keyboard_alt"
+                    iconSize: Appearance.font.pixelSize.huge
+                    color: Appearance.colors.colOnSurfaceVariant
+                }
+                Loader {
+                    anchors.verticalCenter: parent.verticalCenter
+                    sourceComponent: StyledText {
+                        text: HyprlandXkb.currentLayoutCode
+                        color: Appearance.colors.colOnSurfaceVariant
+                        animateChange: true
+                    }
+                }
+            }
+        }
+
+        // Keyboard layout (Fcitx)
+        Bar.SysTray {
+            Layout.rightMargin: 10
+            Layout.alignment: Qt.AlignVCenter
+            showSeparator: false
+            showOverflowMenu: false
+            pinnedItems: SystemTray.items.values.filter(i => i.id == "Fcitx")
+            visible: pinnedItems.length > 0
+        }
+    }
+
+    // Right toolbar
+    Toolbar {
+        id: rightIsland
+        anchors {
+            left: mainIsland.right
+            top: mainIsland.top
+            bottom: mainIsland.bottom
+            leftMargin: 10
+        }
+
+        scale: root.toolbarScale
+        opacity: root.toolbarOpacity
+
+        IconAndTextPair {
+            visible: UPower.displayDevice.isLaptopBattery
+            icon: Battery.isCharging ? "bolt" : "battery_android_full"
+            text: Math.round(Battery.percentage * 100)
+            color: (Battery.isLow && !Battery.isCharging) ? Appearance.colors.colError : Appearance.colors.colOnSurfaceVariant
+        }
+
+        ActionToolbarIconButton {
+            id: sleepButton
+            onClicked: Session.suspend()
+            text: "dark_mode"
+        }
+
+        PasswordGuardedActionToolbarIconButton {
+            id: powerButton
+            text: "power_settings_new"
+            targetAction: LockContext.ActionEnum.Poweroff
+        }
+
+        PasswordGuardedActionToolbarIconButton {
+            id: rebootButton
+            text: "restart_alt"
+            targetAction: LockContext.ActionEnum.Reboot
+        }
+    }
+
+    component PasswordGuardedActionToolbarIconButton: ActionToolbarIconButton {
+        id: guardedBtn
+        required property var targetAction
+
+        toggled: root.context.targetAction === guardedBtn.targetAction
+
+        onClicked: {
+            if (!root.requirePasswordToPower) {
+                root.context.unlocked(guardedBtn.targetAction);
+                return;
+            }
+            if (root.context.targetAction === guardedBtn.targetAction) {
+                root.context.resetTargetAction();
+            } else {
+                root.context.targetAction = guardedBtn.targetAction;
+                root.context.shouldReFocus();
+            }
+        }
+    }
+
+    component ActionToolbarIconButton: ToolbarButton {
+        id: iconBtn
+        implicitWidth: height
+
+        colBackgroundToggled: Appearance.colors.colSecondaryContainer
+        colBackgroundToggledHover: Appearance.colors.colSecondaryContainerHover
+        colRippleToggled: Appearance.colors.colSecondaryContainerActive
+
+        contentItem: MaterialSymbol {
+            anchors.centerIn: parent
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+            iconSize: 24
+            text: iconBtn.text
+            color: iconBtn.toggled ? Appearance.colors.colOnSecondaryContainer : Appearance.colors.colOnSurfaceVariant
+        }
+    }
+
+    component IconAndTextPair: Row {
+        id: pair
+        required property string icon
+        required property string text
+        property color color: Appearance.colors.colOnSurfaceVariant
+
+        spacing: 4
+        Layout.fillHeight: true
+        Layout.leftMargin: 10
+        Layout.rightMargin: 10
+        
+
+        MaterialSymbol {
+            anchors.verticalCenter: parent.verticalCenter
+            fill: 1
+            text: pair.icon
+            iconSize: Appearance.font.pixelSize.huge
+            animateChange: true
+            color: pair.color
+        }
+        StyledText {
+            anchors.verticalCenter: parent.verticalCenter
+            text: pair.text
+            color: pair.color
         }
     }
 }

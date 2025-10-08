@@ -16,15 +16,17 @@ RowLayout {
     Layout.rightMargin: 8
 
     RowLayout {
+        spacing: 10
         OptionalMaterialSymbol {
             icon: root.icon
+            opacity: root.enabled ? 1 : 0.4
         }
         StyledText {
             id: labelWidget
             Layout.fillWidth: true
             text: root.text
-            font.pixelSize: Appearance.font.pixelSize.small
             color: Appearance.colors.colOnSecondaryContainer
+            opacity: root.enabled ? 1 : 0.4
         }
     }
 
