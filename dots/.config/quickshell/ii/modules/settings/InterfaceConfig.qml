@@ -56,6 +56,20 @@ ContentPage {
         }
 
         ContentSubsection {
+            visible: Config.options.background.clock.style === "digital"
+            title: Translation.tr("Digital clock settings")
+
+            ConfigSwitch {
+                buttonIcon: "animation"
+                text: Translation.tr("Animate time change")
+                checked: Config.options.background.clock.digital.animateChange
+                onCheckedChanged: {
+                    Config.options.background.clock.digital.animateChange = checked;
+                }
+            }
+        }
+
+        ContentSubsection {
             visible: Config.options.background.clock.style === "cookie"
             title: Translation.tr("Cookie clock settings")
 
@@ -68,6 +82,18 @@ ContentPage {
                 }
                 StyledToolTip {
                     text: Translation.tr("Uses Gemini to categorize the wallpaper then picks a preset based on it.\nYou'll need to set Gemini API key on the left sidebar first.\nImages are downscaled for performance, but just to be safe,\ndo not select wallpapers with sensitive information.")
+                }
+            }
+
+            ConfigSwitch {
+                buttonIcon: "airwave"
+                text: Translation.tr("Use old sine wave cookie implementation")
+                checked: Config.options.background.clock.cookie.useSineCookie
+                onCheckedChanged: {
+                    Config.options.background.clock.cookie.useSineCookie = checked;
+                }
+                StyledToolTip {
+                    text: "Looks a bit softer and more consistent with different number of sides,\nbut has less impressive morphing"
                 }
             }
 
@@ -530,6 +556,15 @@ ContentPage {
                     Config.options.lock.showLockedText = checked;
                 }
             }
+
+            ConfigSwitch {
+                buttonIcon: "shapes"
+                text: Translation.tr('Use varying shapes for password characters')
+                checked: Config.options.lock.materialShapeChars
+                onCheckedChanged: {
+                    Config.options.lock.materialShapeChars = checked;
+                }
+            }
         }
         ContentSubsection {
             title: Translation.tr("Style: Blurred")
@@ -575,6 +610,100 @@ ContentPage {
     }
 
     ContentSection {
+        icon: "screenshot_frame_2"
+        title: Translation.tr("Region selector (screen snipping/Google Lens)")
+
+        ContentSubsection {
+            title: Translation.tr("Hint target regions")
+            ConfigRow {
+                ConfigSwitch {
+                    buttonIcon: "select_window"
+                    text: Translation.tr('Windows')
+                    checked: Config.options.regionSelector.targetRegions.windows
+                    onCheckedChanged: {
+                        Config.options.regionSelector.targetRegions.windows = checked;
+                    }
+                }
+                ConfigSwitch {
+                    buttonIcon: "right_panel_open"
+                    text: Translation.tr('Layers')
+                    checked: Config.options.regionSelector.targetRegions.layers
+                    onCheckedChanged: {
+                        Config.options.regionSelector.targetRegions.layers = checked;
+                    }
+                }
+                ConfigSwitch {
+                    buttonIcon: "nearby"
+                    text: Translation.tr('Content')
+                    checked: Config.options.regionSelector.targetRegions.content
+                    onCheckedChanged: {
+                        Config.options.regionSelector.targetRegions.content = checked;
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("Could be images or parts of the screen that have some containment.\nMight not always be accurate.\nThis is done with an image processing algorithm run locally and no AI is used.")
+                    }
+                }
+            }
+        }
+        
+        ContentSubsection {
+            title: Translation.tr("Google Lens")
+            
+            ConfigSelectionArray {
+                currentValue: Config.options.search.imageSearch.useCircleSelection ? "circle" : "rectangles"
+                onSelected: newValue => {
+                    Config.options.search.imageSearch.useCircleSelection = (newValue === "circle");
+                }
+                options: [
+                    { icon: "activity_zone", value: "rectangles", displayName: Translation.tr("Rectangular selection") },
+                    { icon: "gesture", value: "circle", displayName: Translation.tr("Circle to Search") }
+                ]
+            }
+        }
+
+        ContentSubsection {
+            title: Translation.tr("Rectangular selection")
+
+            ConfigSwitch {
+                buttonIcon: "point_scan"
+                text: Translation.tr("Show aim lines")
+                checked: Config.options.regionSelector.rect.showAimLines
+                onCheckedChanged: {
+                    Config.options.regionSelector.rect.showAimLines = checked;
+                }
+            }
+        }
+
+        ContentSubsection {
+            title: Translation.tr("Circle selection")
+            
+            ConfigSpinBox {
+                icon: "eraser_size_3"
+                text: Translation.tr("Stroke width")
+                value: Config.options.regionSelector.circle.strokeWidth
+                from: 1
+                to: 20
+                stepSize: 1
+                onValueChanged: {
+                    Config.options.regionSelector.circle.strokeWidth = value;
+                }
+            }
+
+            ConfigSpinBox {
+                icon: "screenshot_frame_2"
+                text: Translation.tr("Padding")
+                value: Config.options.regionSelector.circle.padding
+                from: 0
+                to: 100
+                stepSize: 5
+                onValueChanged: {
+                    Config.options.regionSelector.circle.padding = value;
+                }
+            }
+        }
+    }
+
+    ContentSection {
         icon: "side_navigation"
         title: Translation.tr("Sidebars")
 
@@ -600,6 +729,86 @@ ContentPage {
         }
 
         ContentSubsection {
+            title: Translation.tr("Quick toggles")
+            
+            ConfigSelectionArray {
+                Layout.fillWidth: false
+                currentValue: Config.options.sidebar.quickToggles.style
+                onSelected: newValue => {
+                    Config.options.sidebar.quickToggles.style = newValue;
+                }
+                options: [
+                    {
+                        displayName: Translation.tr("Classic"),
+                        icon: "password_2",
+                        value: "classic"
+                    },
+                    {
+                        displayName: Translation.tr("Android"),
+                        icon: "action_key",
+                        value: "android"
+                    }
+                ]
+            }
+
+            ConfigSpinBox {
+                enabled: Config.options.sidebar.quickToggles.style === "android"
+                icon: "splitscreen_left"
+                text: Translation.tr("Columns")
+                value: Config.options.sidebar.quickToggles.android.columns
+                from: 1
+                to: 8
+                stepSize: 1
+                onValueChanged: {
+                    Config.options.sidebar.quickToggles.android.columns = value;
+                }
+            }
+        }
+
+        ContentSubsection {
+            title: Translation.tr("Sliders")
+
+            ConfigSwitch {
+                buttonIcon: "check"
+                text: Translation.tr("Enable")
+                checked: Config.options.sidebar.quickSliders.enable
+                onCheckedChanged: {
+                    Config.options.sidebar.quickSliders.enable = checked;
+                }
+            }
+            
+            ConfigSwitch {
+                buttonIcon: "brightness_6"
+                text: Translation.tr("Brightness")
+                enabled: Config.options.sidebar.quickSliders.enable
+                checked: Config.options.sidebar.quickSliders.showBrightness
+                onCheckedChanged: {
+                    Config.options.sidebar.quickSliders.showBrightness = checked;
+                }
+            }
+
+            ConfigSwitch {
+                buttonIcon: "volume_up"
+                text: Translation.tr("Volume")
+                enabled: Config.options.sidebar.quickSliders.enable
+                checked: Config.options.sidebar.quickSliders.showVolume
+                onCheckedChanged: {
+                    Config.options.sidebar.quickSliders.showVolume = checked;
+                }
+            }
+
+            ConfigSwitch {
+                buttonIcon: "mic"
+                text: Translation.tr("Microphone")
+                enabled: Config.options.sidebar.quickSliders.enable
+                checked: Config.options.sidebar.quickSliders.showMic
+                onCheckedChanged: {
+                    Config.options.sidebar.quickSliders.showMic = checked;
+                }
+            }
+        }
+
+        ContentSubsection {
             title: Translation.tr("Corner open")
             tooltip: Translation.tr("Allows you to open sidebars by clicking or hovering screen corners regardless of bar position")
             ConfigRow {
@@ -613,22 +822,22 @@ ContentPage {
                     }
                 }
             }
+            ConfigSwitch {
+                buttonIcon: "highlight_mouse_cursor"
+                text: Translation.tr("Hover to trigger")
+                checked: Config.options.sidebar.cornerOpen.clickless
+                onCheckedChanged: {
+                    Config.options.sidebar.cornerOpen.clickless = checked;
+                }
+
+                StyledToolTip {
+                    text: Translation.tr("When this is off you'll have to click")
+                }
+            }
             Row {
                 ConfigSwitch {
-                    buttonIcon: "highlight_mouse_cursor"
-                    text: Translation.tr("Hover to trigger")
-                    checked: Config.options.sidebar.cornerOpen.clickless
-                    onCheckedChanged: {
-                        Config.options.sidebar.cornerOpen.clickless = checked;
-                    }
-
-                    StyledToolTip {
-                        text: Translation.tr("When this is off you'll have to click")
-                    }
-                }
-                ConfigSwitch {
                     enabled: !Config.options.sidebar.cornerOpen.clickless
-                    text: Translation.tr("but force at absolute corner")
+                    text: Translation.tr("Force hover open at absolute corner")
                     checked: Config.options.sidebar.cornerOpen.clicklessCornerEnd
                     onCheckedChanged: {
                         Config.options.sidebar.cornerOpen.clicklessCornerEnd = checked;
@@ -638,7 +847,29 @@ ContentPage {
                         text: Translation.tr("When the previous option is off and this is on,\nyou can still hover the corner's end to open sidebar,\nand the remaining area can be used for volume/brightness scroll")
                     }
                 }
+                ConfigSpinBox {
+                    icon: "arrow_cool_down"
+                    text: Translation.tr("with vertical offset")
+                    value: Config.options.sidebar.cornerOpen.clicklessCornerVerticalOffset
+                    from: 0
+                    to: 20
+                    stepSize: 1
+                    onValueChanged: {
+                        Config.options.sidebar.cornerOpen.clicklessCornerVerticalOffset = value;
+                    }
+                    MouseArea {
+                        id: mouseArea
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        acceptedButtons: Qt.NoButton
+                        StyledToolTip {
+                            extraVisibleCondition: mouseArea.containsMouse
+                            text: Translation.tr("Why this is cool:\nFor non-0 values, it won't trigger when you reach the\nscreen corner along the horizontal edge, but it will when\nyou do along the vertical edge")
+                        }
+                    }
+                }
             }
+            
             ConfigRow {
                 uniform: true
                 ConfigSwitch {
@@ -730,6 +961,14 @@ ContentPage {
                 Config.options.overview.enable = checked;
             }
         }
+        ConfigSwitch {
+            buttonIcon: "center_focus_strong"
+            text: Translation.tr("Center icons")
+            checked: Config.options.overview.centerIcons
+            onCheckedChanged: {
+                Config.options.overview.centerIcons = checked;
+            }
+        }
         ConfigSpinBox {
             icon: "loupe"
             text: Translation.tr("Scale (%)")
@@ -764,23 +1003,6 @@ ContentPage {
                 onValueChanged: {
                     Config.options.overview.columns = value;
                 }
-            }
-        }
-    }
-
-    ContentSection {
-        icon: "screenshot_frame_2"
-        title: Translation.tr("Screenshot tool")
-
-        ConfigSwitch {
-            buttonIcon: "nearby"
-            text: Translation.tr('Show regions of potential interest')
-            checked: Config.options.screenshotTool.showContentRegions
-            onCheckedChanged: {
-                Config.options.screenshotTool.showContentRegions = checked;
-            }
-            StyledToolTip {
-                text: Translation.tr("Such regions could be images or parts of the screen that have some containment.\nMight not always be accurate.\nThis is done with an image processing algorithm run locally and no AI is used.")
             }
         }
     }
