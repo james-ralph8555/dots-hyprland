@@ -1,7 +1,7 @@
-import qs.modules.common.widgets.shapes
+import "shapes" as Shapes
 import "shapes/material-shapes.js" as MaterialShapes
 
-ShapeCanvas {
+Shapes.ShapeCanvas {
     id: root
     enum Shape {
         Circle,
