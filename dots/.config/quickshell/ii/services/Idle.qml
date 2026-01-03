@@ -1,8 +1,8 @@
+pragma Singleton
 import qs.modules.common
 import QtQuick
 import Quickshell
 import Quickshell.Wayland
-pragma Singleton
 
 /**
  * A nice wrapper for date and time strings.
@@ -10,11 +10,27 @@ pragma Singleton
 Singleton {
     id: root
 
-    property bool inhibit: Persistent.states.idle.inhibit
+    property alias inhibit: idleInhibitor.enabled
+    inhibit: false
 
-    function toggleInhibit() {
-        root.inhibit = !root.inhibit
-        Persistent.states.idle.inhibit = root.inhibit
+    Connections {
+        target: Persistent
+        function onReadyChanged() {
+            if (!Persistent.isNewHyprlandInstance) {
+                root.inhibit = Persistent.states.idle.inhibit;
+            } else {
+                Persistent.states.idle.inhibit = root.inhibit;
+            }
+        }
+    }
+
+    function toggleInhibit(active = null) {
+        if (active !== null) {
+            root.inhibit = active;
+        } else {
+            root.inhibit = !root.inhibit;
+        }
+        Persistent.states.idle.inhibit = root.inhibit;
     }
 
     // IdleInhibitor disabled temporarily - Quickshell 0.2.0 compatibility issue
@@ -22,7 +38,8 @@ Singleton {
     /*
     IdleInhibitor {
         id: idleInhibitor
-        window: PanelWindow { // Inhibitor requires a "visible" surface
+        window: PanelWindow {
+            // Inhibitor requires a "visible" surface
             // Actually not lol
             implicitWidth: 0
             implicitHeight: 0
@@ -38,6 +55,5 @@ Singleton {
             }
         }
     }
-    */    
-
+    */
 }
