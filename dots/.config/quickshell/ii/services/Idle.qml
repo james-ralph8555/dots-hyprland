@@ -33,6 +33,9 @@ Singleton {
         Persistent.states.idle.inhibit = root.inhibit;
     }
 
+    // IdleInhibitor disabled temporarily - Quickshell 0.2.0 compatibility issue
+    // TODO: Re-enable when upstream fixes IdleInhibitor component
+    /*
     IdleInhibitor {
         id: idleInhibitor
         window: PanelWindow {
@@ -52,4 +55,5 @@ Singleton {
             }
         }
     }
+    */
 }
