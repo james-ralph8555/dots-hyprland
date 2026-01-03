@@ -16,7 +16,6 @@ install-Rubik(){
 	x sudo mkdir -p /usr/local/share/licenses/ttf-rubik/
 	x sudo cp OFL.txt /usr/local/share/licenses/ttf-rubik/LICENSE
   x fc-cache -fv
-  x gsettings set org.gnome.desktop.interface font-name 'Rubik 11'
   x cd $REPO_ROOT
 }
 
@@ -88,6 +87,10 @@ install-python-packages(){
   # we need python 3.12 https://github.com/python-pillow/Pillow/issues/8089
   x uv venv --prompt .venv $(eval echo $ILLOGICAL_IMPULSE_VIRTUAL_ENV) -p 3.12
   x source $(eval echo $ILLOGICAL_IMPULSE_VIRTUAL_ENV)/bin/activate
-  x uv pip install -r sdata/uv/requirements.txt
+  if [[ "$INSTALL_VIA_NIX" = true ]]; then
+    x nix-shell ${REPO_ROOT}/sdata/uv/shell.nix --run "uv pip install -r ${REPO_ROOT}/sdata/uv/requirements.txt"
+  else
+    x uv pip install -r ${REPO_ROOT}/sdata/uv/requirements.txt
+  fi
   x deactivate
 }
