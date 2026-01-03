@@ -10,8 +10,8 @@ import Quickshell.Wayland
 Singleton {
     id: root
 
-    property alias inhibit: idleInhibitor.enabled
-    inhibit: false
+    // Keep as a plain property until IdleInhibitor is re-enabled.
+    property bool inhibit: false
 
     Connections {
         target: Persistent
