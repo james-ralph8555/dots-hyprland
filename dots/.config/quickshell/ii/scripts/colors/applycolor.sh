@@ -1,4 +1,4 @@
-#!/run/current-system/sw/bin/sh
+#!/usr/bin/env bash
 
 QUICKSHELL_CONFIG_NAME="ii"
 XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
@@ -26,12 +26,6 @@ colorstrings=$(cat $STATE_DIR/user/generated/material_colors.scss | cut -d: -f2 
 IFS=$'\n'
 colorlist=($colornames)     # Array of color names
 colorvalues=($colorstrings) # Array of color values
-
-for i in "${!colorlist[@]}"; do
-  if [ "${colorlist[$i]}" = "\$term7" ]; then
-    colorvalues[$i]="#D9E0EE"
-  fi
-done
 
 apply_term() {
   # Check if terminal escape sequence template exists

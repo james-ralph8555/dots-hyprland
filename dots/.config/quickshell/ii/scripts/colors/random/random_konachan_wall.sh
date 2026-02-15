@@ -1,4 +1,4 @@
-#!/run/current-system/sw/bin/sh
+#!/usr/bin/env bash
 
 get_pictures_dir() {
     if command -v xdg-user-dir &> /dev/null; then

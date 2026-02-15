@@ -10,7 +10,8 @@ fi
 if [[ "$1" == *"+"* || "$1" == *"-"* ]]; then ## Is this something like r+1 or -1?
   hyprctl dispatch "${dispatcher}" "$1" ## $1 = workspace id since we shifted earlier.
 elif [[ "$1" =~ ^[0-9]+$ ]]; then ## Is this just a number?
-  hyprctl dispatch "${dispatcher}" "$1" ## Direct workspace switching for single monitor setup
+  target_workspace=$((((curr_workspace - 1) / 10 ) * 10 + $1))
+  hyprctl dispatch "${dispatcher}" "${target_workspace}"
 else
   hyprctl dispatch "${dispatcher}" "$1" ## In case the target in a string, required for special workspaces.
   exit 1
