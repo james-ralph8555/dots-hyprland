@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Shapes
 import Quickshell
 import qs.modules.common
-import qs.modules.common.widgets.shapes
+import "shapes" as Shapes
 import "shapes/geometry/offset.js" as Offset
 import "shapes/shapes/corner-rounding.js" as CornerRounding
 import "shapes/shapes/rounded-polygon.js" as RoundedPolygon
@@ -19,7 +19,7 @@ Item {
 
     property var cornerRounding: new CornerRounding.CornerRounding((sides < 17 ? 1.5 : 1.1) / Math.max(sides, 1))
 
-    ShapeCanvas {
+    Shapes.ShapeCanvas {
         id: shapeCanvas
         anchors.fill: parent
         roundedPolygon: switch(sides) {
@@ -36,4 +36,3 @@ Item {
         }
     }
 }
-
