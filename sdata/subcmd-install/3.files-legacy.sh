@@ -52,11 +52,7 @@ case "${SKIP_HYPRLAND}" in
       install_file__auto_backup "dots/.config/hypr/$i" "${XDG_CONFIG_HOME}/hypr/$i"
     done
     for i in hypridle.conf ; do
-      if [[ "${INSTALL_VIA_NIX}" == true ]]; then
-        install_file__auto_backup "dots-extra/via-nix/$i" "${XDG_CONFIG_HOME}/hypr/$i"
-      else
-        install_file__auto_backup "dots/.config/hypr/$i" "${XDG_CONFIG_HOME}/hypr/$i"
-      fi
+      install_file__auto_backup "dots/.config/hypr/$i" "${XDG_CONFIG_HOME}/hypr/$i"
     done
     if [ "$OS_GROUP_ID" = "fedora" ];then
       v bash -c "printf \"# For fedora to setup polkit\nexec-once = /usr/libexec/kf6/polkit-kde-authentication-agent-1\n\" >> ${XDG_CONFIG_HOME}/hypr/hyprland/execs.conf"
